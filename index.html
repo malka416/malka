@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>האפליקציה שלי</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>האפליקציה שלי</h1>
+      <p class="subtitle">מנהל משימות קטן ומהיר.</p>
+
+      <form id="task-form" class="task-form">
+        <label for="task-input">משימה חדשה</label>
+        <div class="row">
+          <input id="task-input" type="text" placeholder="לדוגמה: לסיים את הפרויקט" required />
+          <button type="submit">הוסף</button>
+        </div>
+      </form>
+
+      <ul id="task-list" class="task-list" aria-live="polite"></ul>
+      <p id="empty-state" class="empty-state">אין משימות עדיין. אפשר להתחיל עכשיו ✨</p>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="music.js"></script>
+  </body>
+</html>
