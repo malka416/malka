@@ -19,7 +19,7 @@
     0.4, 0.6, 1.0, 0.6, 0.6,
     1.2,
   ];
-  const TEMPO = 1.05; // scale all durations
+  const TEMPO = 1.05;
 
   function playNote(freq, startTime, duration) {
     const osc = ctx.createOscillator();
@@ -53,7 +53,8 @@
     scheduleTimer = setTimeout(scheduler, LOOKAHEAD * 1000);
   }
 
-  function start() {
+  function startMusic() {
+    if (isPlaying) return;
     if (!ctx) {
       ctx = new AudioContext();
       masterGain = ctx.createGain();
@@ -65,16 +66,18 @@
     nextNoteTime = ctx.currentTime + 0.15;
     scheduler();
     isPlaying = true;
+    btn.classList.add("playing");
+    btn.setAttribute("aria-label", "עצור מוזיקת רקע");
   }
 
-  function stop() {
+  function stopMusic() {
     clearTimeout(scheduleTimer);
     isPlaying = false;
+    btn.classList.remove("playing");
+    btn.setAttribute("aria-label", "הפעל מוזיקת רקע");
     if (masterGain) {
       masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
-      setTimeout(() => {
-        if (masterGain) masterGain.gain.value = 0.7;
-      }, 1500);
+      setTimeout(() => { if (masterGain) masterGain.gain.value = 0.7; }, 1500);
     }
   }
 
@@ -87,14 +90,39 @@
   document.body.appendChild(btn);
 
   btn.addEventListener("click", () => {
-    if (isPlaying) {
-      stop();
-      btn.classList.remove("playing");
-      btn.setAttribute("aria-label", "הפעל מוזיקת רקע");
-    } else {
-      start();
+    isPlaying ? stopMusic() : startMusic();
+  });
+
+  // Auto-start: try immediately, fall back to first user interaction
+  function tryAutoplay() {
+    ctx = new AudioContext();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = 0.7;
+    masterGain.connect(ctx.destination);
+
+    if (ctx.state === "running") {
+      // Browser allows autoplay
+      noteIndex = 0;
+      nextNoteTime = ctx.currentTime + 0.15;
+      scheduler();
+      isPlaying = true;
       btn.classList.add("playing");
       btn.setAttribute("aria-label", "עצור מוזיקת רקע");
+    } else {
+      // Blocked — start on first interaction anywhere on the page
+      const events = ["click", "touchstart", "keydown"];
+      function onFirstInteraction() {
+        events.forEach((e) => document.removeEventListener(e, onFirstInteraction));
+        startMusic();
+      }
+      events.forEach((e) => document.addEventListener(e, onFirstInteraction, { once: true }));
     }
-  });
+  }
+
+  // Wait for DOM ready then attempt autoplay
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", tryAutoplay);
+  } else {
+    tryAutoplay();
+  }
 })();
